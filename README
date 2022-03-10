@@ -1,0 +1,6 @@
+Yelp uses GET requests for its search. Using Python write a program that searches on yelp.com for the top-40 “Donut Shop” in the San Francisco area. Save each search result page to disk, “sf_donut_shop_search_page_[PN].htm” (replace [PN] with the page 
+number). 
+Using Python, write new code that opens the search result pages saved in (1) and parses out all shop information (search rank, name, linked URL [this store’s Yelp URL], star rating, number of 
+reviews, store tags, “$” signs, delivery / dine-in tags, and whether you can order through Yelp).
+create a MongoDB collection called “sf_donut_shops” that stores all the extracted shop information, one document for each shop. 
+Update each shop document on the MongoDB collection “sf_donut_shops” to contain the shop’s address, phone number, website, and geolocation. Lastly, place an index on the shop’s search rank.
