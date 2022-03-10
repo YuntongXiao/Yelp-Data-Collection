@@ -1,3 +1,5 @@
+This project is about using Python to collect donuts store data on Yelp, and stroing the data in MongoDB collection.
+
 Yelp uses GET requests for its search. Using Python write a program that searches on yelp.com for the top-40 “Donut Shop” in the San Francisco area. Save each search result page to disk, “sf_donut_shop_search_page_[PN].htm” (replace [PN] with the page 
 number). 
 Using Python, write new code that opens the search result pages saved in (1) and parses out all shop information (search rank, name, linked URL [this store’s Yelp URL], star rating, number of 
