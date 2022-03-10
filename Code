@@ -1,0 +1,416 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+
+# In[1]:
+
+
+from bs4 import BeautifulSoup
+import requests
+import time
+headers ={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.56'} 
+
+
+# In[384]:
+
+
+for i in range(4):
+    URL= 'https://www.yelp.com/search?find_desc=Donuts&find_loc=San+Francisco&start='+str(i*10)
+    page = requests.get(URL,headers=headers)
+    print(URL)
+    filename='sf_donut_shop_search_page_'+str(i+1)
+    time.sleep(10) 
+    f = open(filename.replace('/', '_') + ".html", "wb") ### Open an empty html file
+    f.write(page.content)#save to page.html
+    f.close()
+
+
+
+# In[385]:
+
+
+for i in range(1,5):
+    filename = 'sf_donut_shop_search_page_'+str(i) +".html" 
+    ### read 4 files 
+    
+    with open(filename, 'r', encoding='utf-8') as f:
+        webpage = BeautifulSoup(f.read(), 'html.parser') 
+        items = webpage.find_all('div', attrs={'class': 'container__09f24__mpR8_ hoverable__09f24__wQ_on margin-t3__09f24__riq4X margin-b3__09f24__l9v5d padding-t3__09f24__TMrIW padding-r3__09f24__eaF7p padding-b3__09f24__S8R2d padding-l3__09f24__IOjKY border--top__09f24__exYYb border--right__09f24__X7Tln border--bottom__09f24___mg5X border--left__09f24__DMOkM border-color--default__09f24__NPAKY'})
+
+        for j in items:
+            link=j.find('a')
+            if link.get('href', '/').startswith('/biz/'):
+                print(j.find('h3', attrs={'class': 'css-uvzfg9'}).get_text(separator=" ")) ### Rank and name
+                print('https://www.yelp.com/'+link.get('href', '/')) ## Link
+                print(j.find('span', attrs={'class': 'reviewCount__09f24__tnBk4 css-1e4fdj9'}).text)### reviews
+                print(j.find('p', attrs={'class': 'css-1gfe39a'}).get_text(separator=";"))### tags
+                try: ###tags 1
+                    tag1=j.find_all('p', attrs={'class': 'css-1p8aobs'})
+                    for i in tag1:
+                        print(i.get_text(separator=";"))
+                except:
+                    print(';')
+                
+                try: ###tags 2
+                    tag=j.find_all('p', attrs={'class': 'tagText__09f24__ArEfy iaTagText__09f24__Gv1CO css-12bvu5l'})
+                    for i in tag:
+                        print(i.get_text(separator=";"))
+                except:
+                    print(';')
+                    
+                try: ###order
+                    print(j.find('span', attrs={'class': 'css-1enow5j'}).get_text(separator=";"))
+                except:
+                    print(';')
+                    
+        
+        for x in webpage.find_all('div', {'class':re.compile(r'i-stars.+')}): ###Stars
+            rate_list=[]
+            for j in items:
+                link=j.find('a')
+                if link.get('href', '/').startswith('/biz/'):
+                    rate_list.append(x.get('aria-label'))
+        print(rate_list)
+
+
+
+
+# In[675]:
+
+
+json_list=[]
+rank_name_list=list()
+link_list=list()
+reviews=list()
+tag1=list()
+order=list()
+rating_list=[]
+
+for i in range(1,5):
+    filename = 'sf_donut_shop_search_page_'+str(i) +".html" 
+    ### read 4 files 
+    
+    with open(filename, 'r', encoding='utf-8') as f:
+        webpage = BeautifulSoup(f.read(), 'html.parser') 
+        items = webpage.find_all('div', attrs={'class': 'container__09f24__mpR8_ hoverable__09f24__wQ_on margin-t3__09f24__riq4X margin-b3__09f24__l9v5d padding-t3__09f24__TMrIW padding-r3__09f24__eaF7p padding-b3__09f24__S8R2d padding-l3__09f24__IOjKY border--top__09f24__exYYb border--right__09f24__X7Tln border--bottom__09f24___mg5X border--left__09f24__DMOkM border-color--default__09f24__NPAKY'})
+        
+        for j in items:
+
+            link=j.find('a')
+            if link.get('href', '/').startswith('/biz/'):
+                dict_temp = {}
+                rank_name_list.append(j.find('h3', attrs={'class': 'css-uvzfg9'}).get_text(separator=" "))### Rank and name
+                k0='rank'
+                rank_name=j.find('h3', attrs={'class': 'css-uvzfg9'}).get_text(separator=" ")
+                v0=rank_name.split('.\xa0')[0]
+                k1='name'
+                v1=rank_name.split('.\xa0')[1]
+                
+                link_list.append('https://www.yelp.com/'+link.get('href', '/')) ## Link
+                k2='link'
+                v2='https://www.yelp.com/'+link.get('href', '/')
+                
+                reviews.append(j.find('span', attrs={'class': 'reviewCount__09f24__tnBk4 css-1e4fdj9'}).text)### reviews
+                k3='reviews'
+                v3=j.find('span', attrs={'class': 'reviewCount__09f24__tnBk4 css-1e4fdj9'}).text
+                
+                tag1.append(j.find('p', attrs={'class': 'css-1gfe39a'}).get_text(separator=";"))### dollar signs
+                tag_1=j.find('p', attrs={'class': 'css-1gfe39a'}).get_text(separator=";")
+                k4_1="$ sign"
+                v4_1='$'*tag_1.count("$")
+                
+                ### store tages
+                tag0=list()
+                try: ###tags 2
+                    tag_0=j.find_all('p', attrs={'class': 'css-1p8aobs'})
+                    for i in tag_0:
+                        tag0.append(i.get_text(separator=";"))
+                    k4='Store_tags'
+                    v4=tag0
+                except:
+                    v4=''
+                  
+                
+               #### delivery / dine-in tags,
+                tag2=list()
+                try: ###tags 2
+                    tag=j.find_all('p', attrs={'class': 'tagText__09f24__ArEfy iaTagText__09f24__Gv1CO css-12bvu5l'})
+                    for i in tag:
+                        tag2.append(i.get_text(separator=";"))
+                    k5='delivery / dine-in tags'
+                    v5=tag2
+                except:
+                    v5=''
+                                           
+                try: ###order
+                    order.append(j.find('span', attrs={'class': 'css-1enow5j'}).get_text(separator=";"))
+                    k6='order'
+                    v6=j.find('span', attrs={'class': 'css-1enow5j'}).get_text(separator=";")
+                except:
+                    order.append('')
+                    k6='order'
+                    v6='Can not Start Order'
+                
+                dict_temp[k0] = v0
+                dict_temp[k1] = v1
+                dict_temp[k2] = v2
+                dict_temp[k3] = v3
+                dict_temp[k4] = v4
+                dict_temp[k4_1] = v4_1
+                dict_temp[k5] = v5
+                dict_temp[k6] = v6
+                json_list.append(dict_temp)      
+                
+        for x in webpage.find_all('div', {'class':re.compile(r'i-stars.+')}): ###Stars
+            rate_list=[]
+            for j in items:
+                link=j.find('a')
+                if link.get('href', '/').startswith('/biz/'):
+                    rate_list.append(x.get('aria-label'))
+        rating_list.append(rate_list)
+            
+rating_list2=[]
+for i in range(len(rating_list)):
+    for j in range(len(rating_list[i])):
+        rating_list2.append(rating_list[i][j])
+
+for i in range(len(rating_list2)):
+    k7='stars'
+    json_list[i][k7]=rating_list2[i]
+
+
+# In[676]:
+
+
+json_list
+
+
+# In[677]:
+
+
+from collections import defaultdict, OrderedDict
+import json
+
+for i in range(len(json_list)):
+    json_str = json.dumps(json_list[i], indent=4)
+    filename='sf_donut_shops'+str(i+1)
+    with open(filename+ ".json", 'w') as json_file:
+        json_file.write(json_str)
+
+
+# ### create collection in mongodb
+
+# In[680]:
+
+
+import json
+from pymongo import MongoClient 
+  
+# Making Connection
+myclient = MongoClient("mongodb://localhost:27017/") 
+   
+# database 
+db = myclient["Final_Yelp"]
+   
+# Created or Switched to collection 
+# names: GeeksForGeeks
+Collection = db["sf_donut_shops"]
+
+for i in range(1,41):
+    filename='sf_donut_shops'+str(i)+'.json'
+    # Loading or Opening the json file
+    with open(filename) as file:
+        file_data = json.load(file)
+
+    # Inserting the loaded data in the Collection
+    # if JSON contains data more than one entry
+    # insert_many is used else inser_one is used
+    if isinstance(file_data, list):
+        Collection.insert_many(file_data)  
+    else:
+        Collection.insert_one(file_data)
+
+
+
+
+# In[389]:
+
+
+for i in range(0,41):
+    URL= link_list[i]
+    page = requests.get(URL,headers=headers)
+    print(URL)
+    filename='sf_donut_shop_'+str(i+1)
+    time.sleep(5) 
+    f = open(filename.replace('/', '_') + ".html", "wb") ### Open an empty html file
+    f.write(page.content)#save to page.html
+    f.close()
+
+
+
+
+# In[682]:
+
+
+info_list=[]
+website_list=[]
+address_list=[]
+phone_list=[]
+for a in range(1,41):
+    filename = 'sf_donut_shop_'+str(a) +".html" 
+    store_info={}
+    ### read 40 files 
+    with open(filename, 'r', encoding='utf-8') as f:
+        webpage = BeautifulSoup(f.read(), 'html.parser') 
+        info = webpage.find_all('div', attrs={'class': 'css-xp8w2v padding-t2__09f24__Y6duA padding-r2__09f24__ByXi4 padding-b2__09f24__F0z5y padding-l2__09f24__kf_t_ border--top__09f24__exYYb border--right__09f24__X7Tln border--bottom__09f24___mg5X border--left__09f24__DMOkM border-radius--regular__09f24__MLlCO background-color--white__09f24__ulvSM'})
+        for j in info:
+                ### address
+                try:
+                    items = j.find_all('p', attrs={'class':'css-1ccncw'})
+                    for i in items:
+                        address=i.get_text(separator=";")
+                        address_list.append(address)
+                        k1="address"
+                        v1=address
+                        store_info[k1] = v1
+
+                except:
+                    print("No Address")
+                    
+                ### Phone    
+                try:
+                    items_1 = j.find_all('p', attrs={'class':'css-1h7ysrc'})
+                    phone=items_1[1].get_text(separator=";")
+                    phone_list.append(phone)
+                    k2="phone"
+                    v2=phone
+                    store_info[k2] = v2
+                except:
+                    pass
+                    
+                ### website    
+                try:
+                    items_2 = j.find_all('p', attrs={'class':'css-1h7ysrc'})
+                    website=items_2[0].get_text(separator=";")
+                    website_list.append(phone)
+                    k3="website"
+                    v3=website
+                    store_info[k3] = v3
+                except:
+                    pass
+                
+    info_list.append(store_info)             
+
+
+
+info_list
+
+
+
+
+# In[684]:
+
+
+import http.client, urllib.parse
+
+conn = http.client.HTTPConnection('api.positionstack.com')
+latitude=[]
+longitude=[]
+for i in range(0,40):
+    d={}
+    try:
+        location = info_list[i]['address']
+        #print(location)
+        params = urllib.parse.urlencode({
+            'access_key': '7a21ca985b020a5c9ad7eaae341b23e8',
+            'query': location,
+            'limit': 1
+            })
+
+        conn.request('GET', '/v1/forward?{}'.format(params))
+
+        res = conn.getresponse()
+        data = res.read()
+
+        result=data.decode('utf-8')
+        result2=result.split('{')[2]
+        latitude.append(result2.split(',')[0][11:])
+        longitude.append(result2.split(',')[1][12:])
+        k='geolocation'
+        v4=result2.split(',')[0][11:]
+        v5=result2.split(',')[1][12:]
+        v=[v4,v5]
+
+    except:
+        latitude.append('')
+        longitude.append('')
+        v4=''
+        v5=''
+        v=[v4,v5]
+    d['latitude']=v4
+    d['longitude']=v5
+    info_list[i][k]=d
+
+
+# In[685]:
+
+
+final_list=[]
+for i in range(len(json_list)):
+    final_json = json_list[i].copy()
+    final_json.update(info_list[i])
+    final_list.append(final_json)
+
+
+# In[686]:
+
+
+final_list
+
+
+# In[687]:
+
+
+from collections import defaultdict, OrderedDict
+import json
+
+for i in range(len(final_list)):
+    json_str = json.dumps(final_list[i], indent=4)
+    filename='sf_donut_shops_new'+str(i+1)
+    with open(filename+ ".json", 'w') as json_file:
+        json_file.write(json_str)
+
+
+# ### Update the collection in MongoDB
+
+# In[690]:
+
+
+import json
+from pymongo import MongoClient 
+  
+# Making Connection
+myclient = MongoClient("mongodb://localhost:27017/") 
+   
+# database 
+db = myclient["Final_Yelp"]
+   
+# Created or Switched to collection 
+# names: GeeksForGeeks
+Collection = db["sf_donut_shops_2"]
+
+for i in range(1,41):
+    filename='sf_donut_shops_new'+str(i)+'.json'
+    # Loading or Opening the json file
+    with open(filename) as file:
+        file_data = json.load(file)
+
+### Create the index of rank
+    Collection.create_index('rank', unique = True)
+    # Inserting the loaded data in the Collection
+    # if JSON contains data more than one entry
+    # insert_many is used else inser_one is used
+    if isinstance(file_data, list):
+        Collection.insert_many(file_data)  
+    else:
+        Collection.insert_one(file_data)
